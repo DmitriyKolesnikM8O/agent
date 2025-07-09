@@ -51,7 +51,6 @@ func (a *Agent) Run(ctx context.Context) error {
 
 	}
 
-	return nil
 }
 
 func (a *Agent) runInference(ctx context.Context, conversation []anthropic.MessageParam) (*anthropic.Message, error) {
