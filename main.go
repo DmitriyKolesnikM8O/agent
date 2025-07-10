@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/anthropics/anthropic-sdk-go"
+	openai "github.com/sashabaranov/go-openai"
 )
 
 type Agent struct {
@@ -63,7 +64,7 @@ func (a *Agent) runInference(ctx context.Context, conversation []anthropic.Messa
 	return message, err
 }
 
-func main() {
+func startAnthropic() {
 	client := anthropic.NewClient()
 
 	scanner := bufio.NewScanner(os.Stdin)
@@ -82,6 +83,55 @@ func main() {
 	err := agent.Run(ctx)
 	if err != nil {
 		fmt.Printf("Error: %s\n", err.Error())
+	}
+
+}
+
+func startChatGPT() {
+	fmt.Println("Chat with ChatGPT (use 'ctrl-c' to quit)")
+	reader := bufio.NewReader(os.Stdin)
+	for {
+		fmt.Print("\u001b[94mYou\u001b[0m: ")
+		msg, err := reader.ReadString('\n')
+		if err != nil {
+			fmt.Printf("Error: %s\n", err.Error())
+		}
+
+		client := openai.NewClient(os.Getenv("OPENAI_KEY"))
+		res, err := client.CreateChatCompletion(
+			context.Background(),
+			openai.ChatCompletionRequest{
+				Model: openai.GPT4oLatest,
+				Messages: []openai.ChatCompletionMessage{
+					{
+						Role:    "user",
+						Content: msg,
+					},
+				},
+			},
+		)
+		if err != nil {
+			fmt.Printf("Error: %s\n", err.Error())
+		}
+		fmt.Printf("\u001b[93mChatGPT\u001b[0m: %s\n", res.Choices[0].Message.Content)
+	}
+
+}
+
+func main() {
+	argWithoutProg := os.Args
+
+	if len(argWithoutProg) > 1 {
+		switch {
+		case argWithoutProg[1] == "-anthropic":
+			startAnthropic()
+		case argWithoutProg[1] == "-chatgpt":
+			startChatGPT()
+		default:
+			fmt.Println("Only can use this flags:")
+			fmt.Println("-anthropic")
+			fmt.Println("-chatgpt")
+		}
 	}
 
 }
